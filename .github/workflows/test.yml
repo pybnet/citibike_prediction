@@ -66,7 +66,10 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t pybnet/citibikeproject:v1.4 -f 04_Deployment/retrain_image/Dockerfile .
+          docker build \
+            -t pybnet/citibikeproject:v1.4 \
+            -f 04_Deployment/retrain_image/Dockerfile \
+            04_Deployment/retrain_image/
 
       - name: Push Docker image
         run: |

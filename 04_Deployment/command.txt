@@ -1,14 +1,8 @@
 
 In each folder:
 
-cd /Users/pierre-yvesbenevise/Documents/DataEngineer/Projects/velib_Final_Project_Fullstack_Lead/3_Model_\&_Deployement/Pierre/local_airflow_postgres_server
-cd /Users/pierre-yvesbenevise/Documents/DataEngineer/Projects/velib_Final_Project_Fullstack_Lead/3_Model_\&_Deployement/Pierre/local_mlflow_fastapi
+cd /Users/pierre-yvesbenevise/Documents/DataEngineer/Projects/citibike_prediction/04_Deployment/local_airflow_postgres_server
+cd /Users/pierre-yvesbenevise/Documents/DataEngineer/Projects/citibike_prediction/04_Deployment/local_mlflow_fastapi
 
 docker-compose down
 docker-compose up --build
-
-Lauch Airbyte
-    brew tap airbytehq/tap
-    brew install abctl
-    abctl local install
-    abctl local credentials #to obtain credentials

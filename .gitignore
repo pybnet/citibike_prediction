@@ -22,3 +22,6 @@ mlruns/
 Icon?
 
 __pycache__/
+
+# Ignore hugging_face_mlflow_fastapi folder
+04_Deployment/hugging_face_servers/
