@@ -1,0 +1,89 @@
+version: 2
+
+models:
+  - name: mart_hourly_station_grid
+    description: "Full station × date × hour grid with net flow, generated from int_biketrip_hourly_net_flow"
+    columns:
+      - name: station_id
+        description: "Unique station identifier"
+        tests:
+          - not_null
+      - name: date_hour
+        description: "Exact timestamp of the observation (hourly)"
+        tests:
+          - not_null
+      - name: year
+        description: "Year extracted from date_hour"
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              expression: "= extract(year from date_hour)"
+      - name: month
+        description: "Month extracted from date_hour (1-12)"
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              expression: "= extract(month from date_hour)"
+      - name: day
+        description: "Day extracted from date_hour (1-31)"
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              expression: "= extract(day from date_hour)"
+      - name: hour
+        description: "Hour of the observation (0-23)"
+        tests:
+          - dbt_utils.expression_is_true:
+              expression: "= extract(hour from date_hour)"
+      - name: num_bikes_taken
+        description: "Number of bikes taken from the station during the given hour"
+      - name: num_bikes_dropped
+        description: "Number of bikes returned to the station during the given hour"
+      - name: net_flow
+        description: "Net flow of bikes for the given station, date, and hour"
+        tests:
+          - dbt_utils.expression_is_true:
+              expression: "= coalesce(num_bikes_taken, 0) - coalesce(num_bikes_dropped, 0)"
+      - name: temp
+        description: "Temperature in Celsius (double precision)"
+      - name: relative_humidity
+        description: "Relative humidity in %"
+      - name: precipitation_total
+        description: "Total precipitation in mm"
+      - name: average_wind_speed
+        description: "Average wind speed in m/s"
+      - name: coco
+        description: "COCO code for weather type"
+      - name: coco_group
+        description: "COCO group (category) of the weather event"
+      - name: net_flow_lag_1
+        description: "Net flow lagged by 1 hour"
+      - name: net_flow_lag_2
+        description: "Net flow lagged by 2 hours"
+      - name: net_flow_lag_24
+        description: "Net flow lagged by 24 hours"
+      - name: net_flow_roll_3
+        description: "Rolling average of net flow over previous 3 hours"
+      - name: net_flow_roll_24
+        description: "Rolling average of net flow over previous 24 hours"
+      - name: num_bikes_taken_lag_1
+        description: "Number of bikes taken lagged by 1 hour"
+      - name: num_bikes_dropped_lag_1
+        description: "Number of bikes dropped lagged by 1 hour"
+      - name: jour_semaine
+        description: "Day of the week in French"
+        tests:
+        - accepted_values:
+            values: ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi']
+      - name: is_holiday
+        description: "Boolean flag indicating if the date is a holiday"
+
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: ['station_id', 'date_hour']
+      - accepted_values:
+          column_name: is_holiday
+          values: [true, false]
+      - accepted_values:
+          column_name: coco_group
+          values: ['Pas de pluie', 'Averse de pluie', 'Pluie/Neige', 'Autre']

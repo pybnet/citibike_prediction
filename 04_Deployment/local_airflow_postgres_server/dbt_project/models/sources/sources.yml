@@ -1,0 +1,72 @@
+version: 2
+
+sources:
+  - name: raw
+    schema: public  # the Postgres schema where your raw CSVs are loaded
+    tables:
+      - name: citibike_trips_raw
+        description: "Raw CitiBike trips data"
+        columns:
+          - name: id
+            description: "Primary key"
+          - name: started_at
+            description: "Trip start timestamp"
+          - name: ended_at
+            description: "Trip end timestamp"
+          - name: start_station_id
+            description: "Start station ID"
+          - name: end_station_id
+            description: "End station ID"
+          - name: rideable_type
+            description: "Type of bike"
+          - name: member_casual
+            description: "Customer type (member/casual)"
+          - name: start_lat
+            description: "Start latitude"
+          - name: start_lng
+            description: "Start longitude"
+          - name: end_lat
+            description: "End latitude"
+          - name: end_lng
+            description: "End longitude"
+      - name: citibike_stations
+        description: "CitiBike stations data"
+        columns:
+          - name: id
+            description: "Primary key"
+          - name: short_name
+            description: "Station short name"
+          - name: station_id
+            description: "Station ID"
+          - name: name
+            description: "Station full name"
+          - name: capacity
+            description: "Bike capacity at station"
+          - name: lat
+            description: "Latitude"
+          - name: lon
+            description: "Longitude"
+      - name: weather_data
+        description: "Raw weather observations including temp, humidity, wind, precipitation, and COCO classification"
+        columns:
+          - name: id
+            description: "Primary key"
+          - name: time
+            description: "Timestamp of the observation"
+          - name: temp
+            description: "Temperature in Celsius (double precision)"
+          - name: relative_humidity
+            description: "Relative humidity in %"
+          - name: precipitation_total
+            description: "Total precipitation in mm"
+          - name: average_wind_speed
+            description: "Average wind speed in m/s"
+          - name: coco
+            description: "COCO code for weather type"
+      - name: dim_holidays
+        description: "Holiday dates in the USA"
+        columns:
+          - name: date
+            description: "Date of the holiday"
+          - name: is_holiday
+            description: "is the day a holiday"

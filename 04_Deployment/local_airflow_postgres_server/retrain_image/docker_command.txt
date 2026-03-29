@@ -1,0 +1,4 @@
+cd /Users/pierre-yvesbenevise/Documents/DataEngineer/Projects/velib_Final_Project_Fullstack_Lead/3_Model_\&_Deployement/Pierre/local_airflow_postgres_server/retrain_image
+                                                                                            
+docker build -t pybnet/citibikeproject:v1.4 .
+docker push pybnet/citibikeproject:v1.4

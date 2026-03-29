@@ -1,0 +1,26 @@
+FROM apache/airflow:3.1.7
+
+# Switch to root to install OS packages
+USER root
+
+# Install system dependencies for psycopg2
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    libpq-dev \
+    curl \
+    git \
+    graphviz \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN chmod +x /usr/bin/dot
+
+# Switch back to airflow user for Python packages
+USER airflow
+
+# Copy requirements
+COPY requirements.txt .
+
+# Install Python packages as airflow user
+RUN pip install --no-cache-dir --upgrade pip \
+    && pip install --no-cache-dir -r requirements.txt
