@@ -23,22 +23,22 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('retrain_image/requirements.txt') }}
+          key: ${{ runner.os }}-pip-${{ hashFiles('04_Deployement/retrain_image/requirements.txt') }}
           restore-keys: |
             ${{ runner.os }}-pip-
 
-      # requirements.txt is in retrain_image/ (relative to repo root = local_airflow_postgres_server/)
+      # requirements.txt is in 04_Deployement/retrain_image/ (relative to repo root = citibike_prediction/)
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r retrain_image/requirements.txt
+          pip install -r 04_Deployement/retrain_image/requirements.txt
           pip install pytest pytest-mock
 
       # pytest.ini and tests/ are at repo root — no working-directory needed
-      # PYTHONPATH points to retrain_image/ so retrain.py is importable
+      # PYTHONPATH points to 04_Deployement/retrain_image/ so retrain.py is importable
       - name: Run tests
         env:
-          PYTHONPATH: ${{ github.workspace }}/retrain_image
+          PYTHONPATH: ${{ github.workspace }}/04_Deployement/retrain_image
         run: |
           pytest tests/test_retrain.py -v --tb=short
 
