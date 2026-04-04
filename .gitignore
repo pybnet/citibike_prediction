@@ -16,12 +16,12 @@
 *.npz
 *.joblib
 *logs
+*.log
+*.doc
+*.docx
+*.xls
 *.mov
-
-mlruns/
-
 Icon?
-
 __pycache__/
 
 # Ignore hugging_face_mlflow_fastapi folder
