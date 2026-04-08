@@ -6,7 +6,7 @@
 
 ---
 
-## 📌 Table of Contents
+## Table of Contents
 
 - [Project Overview](#-project-overview)
 - [Architecture](#-architecture)
@@ -294,7 +294,7 @@ GitHub Actions runs on every push to `main`/`develop` and every pull request.
 
 **1. Clone the repo**
 ```bash
-git clone https://github.com/pybnet/citibike_prediction.git
+git clone https://github.com/pybnet/citibike_prediction_lead.git
 cd <your-repo>
 ```
 
@@ -339,17 +339,6 @@ Go to http://localhost:7860, select a station and an hour, choose whether you wa
 | `EVIDENTLY_CLOUD_PROJECT_ID` | Evidently Cloud project ID |
 | `POSTGRES_AIRFLOW_USER/PASSWORD/DB` | Airflow metadata DB credentials |
 | `POSTGRES_DATA_USER/PASSWORD/DB` | CitiBike operational DB credentials |
-
----
-
-## What Else to Add to GitHub
-
-Beyond this README, consider adding:
-
-- `CONTRIBUTING.md` — how to run tests, branch naming, PR process
-- `.env.example` files in both stacks (committed, with placeholder values)
-- `CHANGELOG.md` — version history of model and infrastructure changes
-- Screenshots of the Streamlit UI, MLflow experiment view, and Airflow DAG graph in `/docs/`
 
 ---
 
