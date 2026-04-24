@@ -1,0 +1,11 @@
+name: citibike_project
+version: 1.0
+config-version: 2
+
+profile: citibike_project
+
+model-paths: ["models"]
+
+models:
+  citibike_project:
+    +materialized: table

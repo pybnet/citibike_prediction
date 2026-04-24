@@ -1,0 +1,25 @@
+numpy==1.26.4
+pandas==2.1.0
+pyarrow==14.0.2            # last version compatible with numpy 1.x + pandas 2.1.0
+scikit-learn==1.3.2        # compatible with xgboost 1.7.6
+joblib
+requests
+python-dotenv==1.0.1
+typing-extensions>=4.8.0
+holidays
+graphviz
+psycopg2-binary
+dask
+ 
+# ML / DL / Transformers
+mlflow==2.21.0
+transformers==4.47.0       # latest stable 4.x; 5.x does not exist
+tokenizers>=0.19,<0.22     # required by transformers 4.47.0
+huggingface-hub>=0.23,<1.0 # required by transformers 4.47.0
+boto3
+xgboost==1.7.6             # compatible with scikit-learn 1.3.x
+ 
+# Web / API
+fastapi[standard]
+uvicorn[standard]
+streamlit

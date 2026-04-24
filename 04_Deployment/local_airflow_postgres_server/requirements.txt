@@ -1,0 +1,17 @@
+boto3
+requests
+pandas
+python-dotenv
+dbt-core
+dbt-postgres
+psycopg2-binary
+graphviz
+holidays
+mlflow
+fastapi[standard]
+uvicorn[standard]
+streamlit
+joblib
+evidently==0.7.17
+xgboost==1.7.6 
+scikit-learn==1.6.1 

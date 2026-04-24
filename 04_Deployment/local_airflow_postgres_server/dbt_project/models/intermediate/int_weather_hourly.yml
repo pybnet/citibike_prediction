@@ -1,0 +1,23 @@
+version: 2
+
+models:
+  - name: int_weather_hourly
+    description: "Hourly weather observations, deduplicated, with coco_group classification"
+    columns:
+      - name: date_hour
+        description: "Timestamp truncated to the hour"
+        tests:
+          - not_null
+          - unique
+      - name: temp
+        description: "Temperature in Celsius"
+      - name: relative_humidity
+        description: "Relative humidity in %"
+      - name: precipitation_total
+        description: "Total precipitation in mm"
+      - name: average_wind_speed
+        description: "Average wind speed in m/s"
+      - name: coco
+        description: "COCO code for weather type"
+      - name: coco_group
+        description: "Categorical weather group derived from coco"

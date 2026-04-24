@@ -1,0 +1,11 @@
+
+    
+    
+
+
+
+select net_flow_lag_24
+from "citibike_db"."public"."mart_hourly_station_grid"
+where net_flow_lag_24 is null
+
+

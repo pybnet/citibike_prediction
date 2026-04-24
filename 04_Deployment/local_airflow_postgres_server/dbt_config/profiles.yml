@@ -1,0 +1,12 @@
+citibike_project:
+  target: dev
+  outputs:
+    dev:
+      type: postgres
+      host: postgres_data  # or 'localhost' if running locally
+      user: citibike
+      password: citibike
+      port: 5432
+      dbname: citibike_db
+      schema: public
+      threads: 4
