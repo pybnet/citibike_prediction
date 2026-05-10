@@ -3,6 +3,15 @@ import pandas as pd
 import holidays
 from datetime import date
 
+FEATURES = [
+    "station_id", "year", "month", "day", "hour",
+    "temp", "precipitation_total", "relative_humidity", "average_wind_speed",
+    "num_bikes_taken_lag_1", "num_bikes_dropped_lag_1",
+    "net_flow_lag_1", "net_flow_lag_2", "net_flow_lag_24",
+    "net_flow_roll_3", "net_flow_roll_24",
+    "jour_semaine", "coco_group", "is_holiday", "coco",
+]
+
 def safe_dayofweek(d, year, month):
     try:
         return pd.Timestamp(year=year, month=month, day=d).dayofweek
@@ -40,12 +49,11 @@ def predict_from_user_date(dataset, request_datetime, model, weather_df, update_
     # trier
     df_filtered = df_filtered.sort_values(["station_id", "hour"])
  
-    # Take the last observation (latest hour in filtered data)
+    # model.feature_names_in_ n'existe pas sur un Pipeline sklearn
     if df_filtered.empty:
-        # If no matching rows, create an empty DataFrame with feature columns
-        X = pd.DataFrame(columns=model.feature_names_in_)
+        X = pd.DataFrame(columns=FEATURES)
     else:
-        X = df_filtered[model.feature_names_in_].iloc[-1:]
+        X = df_filtered[FEATURES].iloc[-1:].copy()
 
     # Get US holidays
     us_holidays = holidays.US(years=request_datetime.year)

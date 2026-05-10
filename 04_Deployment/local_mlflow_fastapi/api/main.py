@@ -94,12 +94,7 @@ def ensure_mlflow_bucket():
         print(f"Bucket '{bucket_name}' created successfully.")
     
 @app.on_event("startup")
-def startup_event():
-    # Load model
-    #print("Loading model...")
-    #MODEL_PATH = Path("model/citibike_xgb_pipeline.joblib")
-    #app.model = joblib.load(MODEL_PATH)
-        
+def startup_event():      
     # Load station list
     print("Loading top20_stations list...")
     STATION_PATH = Path("data/top20_station_list.csv")
@@ -299,14 +294,12 @@ def forecast_station(req: FutureFeatures):
         try:
             registered_mv = app.mlflow_client.get_model_version(MODEL_NAME, app.model_version)
             source_run_id = registered_mv.run_id
- 
-            # This call creates the "Logged models" entry for this inference run
+  
             mlflow.sklearn.log_model(
                 sk_model=app.model,
                 artifact_path="model",
-                registered_model_name=None,  # don't create a new registered version
+                registered_model_name=None,
             )
- 
             # --- Registered models tab ---
             # Link this run to the existing registered model version
             # so it appears under "Registered models" in the experiment UI.
