@@ -19,6 +19,7 @@ import mlflow.sklearn
 from mlflow.models.signature import infer_signature
 from mlflow.tracking import MlflowClient
 from scipy.sparse import csr_matrix
+from lightgbm import LGBMRegressor
 
 # logs
 logging.basicConfig(
@@ -172,10 +173,10 @@ def benchmark_models(
 
 
 # =============================================================================
-# 5. Hyperparameter tuning — ExtraTrees
+# 5. Hyperparameter tuning — XGBRegressor
 # =============================================================================
 
-def tune_extratrees(
+def tune_xgboost(
     preprocessor: ColumnTransformer,
     X_train: pd.DataFrame,
     y_train: pd.Series,
@@ -186,21 +187,21 @@ def tune_extratrees(
     n_splits: int = 5,
 ) -> RandomizedSearchCV:
     """
-    Run RandomizedSearchCV on ExtraTrees with TimeSeriesSplit.
+    Run RandomizedSearchCV on XGBRegressor with TimeSeriesSplit.
     n_jobs=1 on RandomizedSearchCV, n_jobs=-1 on ExtraTrees
     to avoid nested parallelism and memory saturation.
     """
     logger.info("Starting hyperparameter tuning ExtraTrees...")
-    et_pipe = Pipeline([
+    xgb_pipe = Pipeline([
         ("prep",  preprocessor),
-        ("model", ExtraTreesRegressor(
+        ("model", XGBRegressor(
             random_state=42,
             n_jobs=-1,    # parallélisme au niveau des arbres
         )),
     ])
     tscv = TimeSeriesSplit(n_splits=n_splits)
     search = RandomizedSearchCV(
-        estimator=et_pipe,
+        estimator=xgb_pipe,
         param_distributions=param_dist,
         n_iter=n_iter,
         scoring="neg_root_mean_squared_error",
@@ -229,13 +230,17 @@ def build_final_pipeline(preprocessor: ColumnTransformer, best_params: dict) -> 
     """Assemble the final ExtraTrees Pipeline from tuned hyperparameters."""
     return Pipeline([
         ("prep", preprocessor),
-        ("model", ExtraTreesRegressor(
-            n_estimators=best_params["model__n_estimators"],
-            max_depth=best_params["model__max_depth"],
-            min_samples_split=best_params["model__min_samples_split"],
-            min_samples_leaf=best_params["model__min_samples_leaf"],
-            max_features=best_params["model__max_features"],
-            bootstrap=best_params["model__bootstrap"],
+        ("model", XGBRegressor(
+            objective="reg:squarederror",
+            n_estimators=best_params['model__n_estimators'],
+            max_depth=best_params['model__max_depth'],
+            learning_rate=best_params['model__learning_rate'],
+            subsample=best_params['model__subsample'],
+            colsample_bytree=best_params['model__colsample_bytree'],
+            reg_alpha=best_params['model__reg_alpha'],
+            reg_lambda=best_params['model__reg_lambda'],
+            min_child_weight=best_params['model__min_child_weight'],
+            gamma=best_params['model__gamma'],
             random_state=42,
             n_jobs=-1,    # safe ici — plus de RandomizedSearchCV au-dessus
         )),
@@ -299,7 +304,7 @@ def log_and_register_model(
     client = MlflowClient()
 
     with mlflow.start_run(
-        run_name="extratrees_final_pipeline",
+        run_name="xgboost_final_pipeline",
         experiment_id=experiment_id
     ) as run:
         run_id = run.info.run_id
@@ -389,19 +394,30 @@ def main():
             reg_alpha=0.0, reg_lambda=1.0,
             random_state=42, n_jobs=1,
         )),
+        ("LightGBM", LGBMRegressor(
+            n_estimators=600, learning_rate=0.05, max_depth=6,
+            subsample=0.8, colsample_bytree=0.8,
+            reg_alpha=0.0, reg_lambda=1.0,
+            random_state=42, n_jobs=1, verbose=-1,
+        )),
+
     ]
     benchmark_models(models, build_preprocessor(X_train), X_train, y_train, X_test, y_test, rmse_baseline)
 
-    # --- Tuning ExtraTrees (meilleur modèle du benchmark) ---
+    # --- Tuning XGBoost (meilleur modèle du benchmark) ---
     param_dist = {
-        "model__n_estimators":      [500, 700, 900],
-        "model__max_depth":         [14, 16, 18, 20],
-        "model__min_samples_split": [2, 5],
-        "model__min_samples_leaf":  [1, 2],
-        "model__max_features":      [0.8, "sqrt"],
-        "model__bootstrap":         [False],
+        "model__n_estimators":     [400, 600, 800, 1000, 1200],
+        "model__max_depth":        [3, 4, 5, 6, 8],
+        "model__learning_rate":    [0.01, 0.03, 0.05, 0.1],
+        "model__subsample":        [0.6, 0.8, 1.0],
+        "model__colsample_bytree": [0.6, 0.8, 1.0],
+        "model__min_child_weight": [1, 3, 5, 10],
+        "model__reg_alpha":        [0.0, 0.1, 1.0],
+        "model__reg_lambda":       [0.5, 1.0, 2.0, 5.0],
+        "model__gamma":            [0.0, 0.1, 0.5, 1.0],
     }
-    search = tune_extratrees(preprocessor, X_train, y_train, X_test, y_test, param_dist)
+
+    search = tune_xgboost(preprocessor, X_train, y_train, X_test, y_test, param_dist)
 
     # --- Final pipeline ---
     final_pipe = train_final_pipeline(preprocessor, search.best_params_, X_train, y_train)

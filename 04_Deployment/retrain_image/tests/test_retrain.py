@@ -29,7 +29,7 @@ from retrain_image.retrain import (
     build_preprocessor,
     preprocess_data,
     benchmark_models,
-    tune_extratrees,
+    tune_xgboost,
     build_final_pipeline,
     train_final_pipeline,
     setup_mlflow,
@@ -89,14 +89,16 @@ def preprocessor(X_y):
 @pytest.fixture
 def fitted_pipeline(X_y, preprocessor):
     X_train, y_train, _, _ = X_y
-    # FIX: use ExtraTreesRegressor params (replaced XGBoost)
     best_params = {
-        "model__n_estimators":      50,   # small for test speed
-        "model__max_depth":         10,
-        "model__min_samples_split": 2,
-        "model__min_samples_leaf":  1,
-        "model__max_features":      0.8,
-        "model__bootstrap":         False,
+        "model__n_estimators":     50,
+        "model__max_depth":        4,
+        "model__learning_rate":    0.1,
+        "model__subsample":        0.8,
+        "model__colsample_bytree": 0.8,
+        "model__reg_alpha":        0.0,
+        "model__reg_lambda":       1.0,
+        "model__min_child_weight": 1,
+        "model__gamma":            0.0,
     }
     return train_final_pipeline(preprocessor, best_params, X_train, y_train)
 
@@ -293,21 +295,23 @@ class TestFinalPipeline:
 
     def test_best_params_passed_to_model(self, preprocessor, X_y):
         X_train, y_train, _, _ = X_y
-        # FIX: ExtraTrees params (replaced XGBoost)
         best_params = {
-            "model__n_estimators":      50,
-            "model__max_depth":         10,
-            "model__min_samples_split": 5,
-            "model__min_samples_leaf":  1,
-            "model__max_features":      0.8,
-            "model__bootstrap":         False,
+            "model__n_estimators":     50,
+            "model__max_depth":        4,
+            "model__learning_rate":    0.1,
+            "model__subsample":        0.8,
+            "model__colsample_bytree": 0.8,
+            "model__reg_alpha":        0.0,
+            "model__reg_lambda":       1.0,
+            "model__min_child_weight": 1,
+            "model__gamma":            0.0,
         }
         pipe = train_final_pipeline(preprocessor, best_params, X_train, y_train)
-        et = pipe.named_steps["model"]
-        assert et.n_estimators      == 50
-        assert et.max_depth         == 10
-        assert et.min_samples_split == 5
-        assert et.max_features      == pytest.approx(0.8)
+        xgb = pipe.named_steps["model"]
+        assert xgb.n_estimators  == 50
+        assert xgb.max_depth     == 4
+        assert xgb.learning_rate == pytest.approx(0.1)
+        assert xgb.subsample     == pytest.approx(0.8)
 
 
 # =============================================================================
