@@ -19,7 +19,6 @@ import mlflow.sklearn
 from mlflow.models.signature import infer_signature
 from mlflow.tracking import MlflowClient
 from scipy.sparse import csr_matrix
-from lightgbm import LGBMRegressor
 
 # logs
 logging.basicConfig(
@@ -394,13 +393,6 @@ def main():
             reg_alpha=0.0, reg_lambda=1.0,
             random_state=42, n_jobs=1,
         )),
-        ("LightGBM", LGBMRegressor(
-            n_estimators=600, learning_rate=0.05, max_depth=6,
-            subsample=0.8, colsample_bytree=0.8,
-            reg_alpha=0.0, reg_lambda=1.0,
-            random_state=42, n_jobs=1, verbose=-1,
-        )),
-
     ]
     benchmark_models(models, build_preprocessor(X_train), X_train, y_train, X_test, y_test, rmse_baseline)
 
