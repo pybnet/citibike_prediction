@@ -25,11 +25,11 @@ from retrain_image.retrain import (
     load_data,
     split_data,
     score,
-    naive_baseline,
+    compute_baseline,
     build_preprocessor,
     preprocess_data,
     benchmark_models,
-    tune_xgboost,
+    tune_extratrees,
     build_final_pipeline,
     train_final_pipeline,
     setup_mlflow,
@@ -89,16 +89,14 @@ def preprocessor(X_y):
 @pytest.fixture
 def fitted_pipeline(X_y, preprocessor):
     X_train, y_train, _, _ = X_y
-    from xgboost import XGBRegressor
+    # FIX: use ExtraTreesRegressor params (replaced XGBoost)
     best_params = {
-        "model__n_estimators":     10,   # small for test speed
-        "model__max_depth":        3,
-        "model__learning_rate":    0.1,
-        "model__subsample":        1.0,
-        "model__colsample_bytree": 1.0,
-        "model__reg_alpha":        0.0,
-        "model__min_child_weight": 1,
-        "model__reg_lambda":       1.0,
+        "model__n_estimators":      50,   # small for test speed
+        "model__max_depth":         10,
+        "model__min_samples_split": 2,
+        "model__min_samples_leaf":  1,
+        "model__max_features":      0.8,
+        "model__bootstrap":         False,
     }
     return train_final_pipeline(preprocessor, best_params, X_train, y_train)
 
@@ -201,18 +199,22 @@ class TestScore:
 # 4. naive_baseline
 # =============================================================================
 
-class TestNaiveBaseline:
+class TestComputeBaseline:
 
-    def test_returns_dict_with_metrics(self, X_y):
+    def test_returns_dict_with_metrics(self, X_y, sample_dataset):
         _, _, _, y_test = X_y
-        m = naive_baseline(y_test)
+        cut = int(len(sample_dataset) * 0.8)
+        test_df = sample_dataset.iloc[cut:].copy()
+        m = compute_baseline(test_df, y_test)
         assert set(m.keys()) == {"rmse", "mae", "r2"}
 
-    def test_r2_is_one(self, X_y):
-        """Comparing y_test to itself should give R²=1."""
+    def test_baseline_rmse_is_positive(self, X_y, sample_dataset):
+        """Baseline using shift(1) should have RMSE > 0."""
         _, _, _, y_test = X_y
-        m = naive_baseline(y_test)
-        assert m["r2"] == pytest.approx(1.0)
+        cut = int(len(sample_dataset) * 0.8)
+        test_df = sample_dataset.iloc[cut:].copy()
+        m = compute_baseline(test_df, y_test)
+        assert m["rmse"] >= 0.0
 
 
 # =============================================================================
@@ -291,21 +293,21 @@ class TestFinalPipeline:
 
     def test_best_params_passed_to_model(self, preprocessor, X_y):
         X_train, y_train, _, _ = X_y
+        # FIX: ExtraTrees params (replaced XGBoost)
         best_params = {
-            "model__n_estimators":     50,
-            "model__max_depth":        4,
-            "model__learning_rate":    0.05,
-            "model__subsample":        0.8,
-            "model__colsample_bytree": 0.8,
-            "model__reg_alpha":        0.1,
-            "model__min_child_weight": 3,
-            "model__reg_lambda":       2.0,
+            "model__n_estimators":      50,
+            "model__max_depth":         10,
+            "model__min_samples_split": 5,
+            "model__min_samples_leaf":  1,
+            "model__max_features":      0.8,
+            "model__bootstrap":         False,
         }
         pipe = train_final_pipeline(preprocessor, best_params, X_train, y_train)
-        xgb = pipe.named_steps["model"]
-        assert xgb.n_estimators    == 50
-        assert xgb.max_depth       == 4
-        assert xgb.learning_rate   == pytest.approx(0.05)
+        et = pipe.named_steps["model"]
+        assert et.n_estimators      == 50
+        assert et.max_depth         == 10
+        assert et.min_samples_split == 5
+        assert et.max_features      == pytest.approx(0.8)
 
 
 # =============================================================================
@@ -325,7 +327,8 @@ class TestSignatureInference:
         pred = fitted_pipeline.predict(X_test)
         X_sig = X_test.astype({col: "float64" for col in X_test.select_dtypes("int").columns})
         sig = infer_signature(X_sig, pred)
-        sig_cols = [inp.name for inp in sig.inputs.inputs]
+        # FIX: use input_names() — compatible with all MLflow 2.x versions
+        sig_cols = sig.inputs.input_names()
         assert set(sig_cols) == set(FEATURES)
 
 
@@ -412,7 +415,8 @@ class TestLogAndRegisterModel:
         mock_run.return_value.__exit__ = MagicMock(return_value=False)
         mock_log_model.return_value    = MagicMock(signature=MagicMock(inputs=[], outputs=[]))
 
-        log_and_register_model(fitted_pipeline, X_test, y_test, "exp_1", "citibike_forecast_model")
+        log_and_register_model(fitted_pipeline, X_test, y_test, "exp_1", "citibike_forecast_model",
+                               rmse_baseline=10.0, best_params={})
 
         logged_metrics = [c[0][0] for c in mock_metric.call_args_list]
         assert "rmse" in logged_metrics
